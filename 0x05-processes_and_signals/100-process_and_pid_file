@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# print To infinity and beyond indefinitely with delay 2 and handle different signal and save my pid in a file
+
+echo $$ >> /var/run/myscript.pid
+
+trap "echo 'I hate the kill command'; rm -rf /var/run/myscript.pid; exit" SIGTERM
+trap "echo 'Y U no love me?!'" SIGINT
+trap "rm -rf /var/run/myscript.pid; exit" SIGQUIT
+
+while true
+do 
+    echo 'To infinity and beyond' 
+    sleep 2
+done
