@@ -1,9 +1,15 @@
 global
-    log     /dev/log local0
+    log     /dev/log local0       
     maxconn 2048
     user    haproxy
     group   haproxy
     tune.ssl.default-dh-param 2048
+
+    ca-base /etc/ssl/certs        
+    crt-base /etc/ssl/private     
+
+    ssl-default-bind-ciphers ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:RSA+AESGCM:RSA+AES:!aNULL:!MD5:!DSS
+    ssl-default-bind-options no-sslv3
 
 defaults
     log     global
@@ -20,15 +26,13 @@ defaults
 
 frontend www-http
     bind   *:80
-    reqadd X-Forwarded-Proto:\ http
+    http-request set-header X-Forwarded-Proto http
     default_backend www-backend
-    redirect scheme https code 301 if !{ ssl_fc }
+    redirect scheme https code 301 if !{ ssl_fc } 
 
 frontend www-https
-    bind   *:443 ssl crt /etc/letsencrypt/live/www.addiak1630.tech/fullchain.pem
-    reqadd X-Forwarded-Proto:\ https
-    acl    letsencrypt-acl path_beg /.well-known/acme-challenge/
-    use_backend letsencrypt-backend if letsencrypt-acl
+    bind   *:443 ssl crt /etc/letsencrypt/live/www.addiak1630.tech/both.pem
+    http-request set-header X-Forwarded-Proto https
     default_backend www-backend
 
 backend www-backend
@@ -36,6 +40,3 @@ backend www-backend
     redirect scheme https if !{ ssl_fc }
     server 207675-web-01 54.234.77.101:80 check
     server 207675-web-02 52.72.11.42:80 check
-
-backend letsencrypt-backend
-    server letsencrypt 127.0.0.1:54321
